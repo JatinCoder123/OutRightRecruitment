@@ -58,7 +58,11 @@ const router = createBrowserRouter([
       },
       {
         path: "dsa",
-        element: <DsaTest />,
+        element: (
+          <ErrorBoundary>
+            <DsaTest />
+          </ErrorBoundary>
+        ),
       },
       {
         path: "testended",
