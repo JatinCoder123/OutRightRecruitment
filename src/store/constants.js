@@ -1,2 +1,2 @@
 export const BACKEND_URL =
-  "https://dev.outrightcrm.in/Jatinmainproject9Sept25/OutRightRecruitment/routes";
+  "https://dev.outrightcrm.in/OutRightRecruitment/routes";

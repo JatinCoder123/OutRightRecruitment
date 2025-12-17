@@ -122,14 +122,20 @@ const candidateSlice = createSlice({
   },
 });
 
-export const register = (first_name, last_name = null, email, role_id) => {
+export const register = (
+  first_name,
+  last_name = null,
+  email,
+  role_id,
+  experience
+) => {
   return async (dispatch) => {
     dispatch(candidateSlice.actions.registerRequest());
 
     try {
       const { data } = await axios.post(
         `${BACKEND_URL}/Candidate.php?endpoint=addCandidate`,
-        { first_name, last_name, email, role_id },
+        { first_name, last_name, email, role_id, experience },
         {
           withCredentials: true,
           headers: { "Content-Type": "application/json" },

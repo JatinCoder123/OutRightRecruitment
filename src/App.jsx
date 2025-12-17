@@ -5,8 +5,6 @@ import {
 } from "react-router-dom";
 import RootLayout from "./layouts/RootLayout";
 import RegisterPage from "./pages/RegisterPage";
-import HomePage from "./pages/HomePage";
-import Language from "./pages/Language";
 import Aptitude from "./pages/Aptitude";
 import RoleSpecifixTest from "./pages/RoleSpecifixTest";
 import DsaTest from "./pages/DsaTest.jsx";
@@ -24,24 +22,16 @@ import ErrorBoundary from "./components/ErrorBoundary.jsx";
 
 const router = createBrowserRouter([
   {
+    path: "/register",
+    element: <RegisterPage />,
+  },
+  {
     path: "/",
     element: <RootLayout />,
     children: [
       {
         index: true, // default child route for "/"
-        element: (
-          <ErrorBoundary>
-            <HomePage />
-          </ErrorBoundary>
-        ),
-      },
-      {
-        path: "register",
-        element: <RegisterPage />,
-      },
-      {
-        path: "language",
-        element: <Language />,
+        element: <></>,
       },
       {
         path: "startTest",
