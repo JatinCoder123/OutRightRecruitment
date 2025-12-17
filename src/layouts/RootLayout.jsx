@@ -31,18 +31,7 @@ export default function RootLayout() {
         <Outlet />
       </main>
       {/* Toast Container */}
-      <ToastContainer
-        position="top-right"
-        autoClose={3000}
-        hideProgressBar={false}
-        newestOnTop={false}
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-        theme="dark" // you can change to "light"
-      />
+
 
       {/* Footer */}
       <footer className="bg-[--color-surface] py-4 text-center text-[--color-text-secondary] text-sm">

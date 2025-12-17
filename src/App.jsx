@@ -19,6 +19,7 @@ import StartPage from "./pages/StartPage.jsx";
 import Testing from "./pages/Testing.jsx";
 import EndScreen from "./pages/EndScreen.jsx";
 import ErrorBoundary from "./components/ErrorBoundary.jsx";
+import { ToastContainer } from "react-toastify";
 
 const router = createBrowserRouter([
   {
@@ -80,6 +81,18 @@ export default function App() {
   return (
     <>
       <RouterProvider router={router} />
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="dark" // you can change to "light"
+      />
     </>
   );
 }
