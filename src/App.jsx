@@ -20,11 +20,16 @@ import Testing from "./pages/Testing.jsx";
 import EndScreen from "./pages/EndScreen.jsx";
 import ErrorBoundary from "./components/ErrorBoundary.jsx";
 import { ToastContainer } from "react-toastify";
+import Terms from "./components/Terms.jsx";
 
 const router = createBrowserRouter([
   {
     path: "/register",
     element: <RegisterPage />,
+  },
+  {
+    path: "/terms",
+    element: <Terms />,
   },
   {
     path: "/",
