@@ -1,14 +1,17 @@
 import { motion } from "framer-motion";
-import { useState } from "react";
-import { useSelector } from "react-redux";
+import { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { Title } from "../components/Title";
 import { toast } from "react-toastify";
 import { validateInput } from "../assets/assests";
 import { Input } from "../components/Input";
 import MainButton from "../components/MainButton";
+import { useNavigate } from "react-router-dom";
+import { getJobRoles } from "../store/slices/jobRole";
+import Terms from "../components/Terms";
+import TestPage from "./TestPage";
 
 export default function Login() {
-  // Form state
   const [formData, setFormData] = useState({
     firstName: { value: "", isValid: true },
     lastName: { value: "", isValid: true },
@@ -18,11 +21,11 @@ export default function Login() {
     skills: { value: [], isValid: true },
   });
   const [jobRoleIndex, setJobRoleIndex] = useState(null);
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
   const [isRoleOpen, setIsRoleOpen] = useState(false);
-  const { roles = [], loading, error } = useSelector((state) => state.jobRoles);
-
-
-  // Language toggle
+  const { roles = [], loading: jobLoading, error: jobError } = useSelector((state) => state.jobRoles);
+  const { isRegisterd, isStarted } = useSelector((state) => state.candidate);
   const toggleLanguage = (lang) => {
     setFormData((prev) => ({
       ...prev,
@@ -57,10 +60,8 @@ export default function Login() {
       },
     }));
   };
-
-  // Submit handler with validation
   const handleSubmit = () => {
-    // Trim values to avoid space-only inputs
+    navigate("/terms");
     let invalid = false;
     if (!validateInput(formData.firstName.value, "text")) {
       setFormData((prev) => ({
@@ -140,6 +141,19 @@ export default function Login() {
 
     console.log("Candidate Payload:", payload);
   };
+  useEffect(() => {
+    if (jobError) {
+      toast.error(jobError);
+      dispatch(jobRoleAction.clearAllErrors());
+      dispatch(getJobRoles());
+    }
+  }, [jobError, dispatch]);
+  if (isRegisterd && isStarted) {
+    return <TestPage />
+  }
+  if (isRegisterd) {
+    return <Terms />
+  }
 
   return (
     <div className="flex min-h-screen bg-gradient-to-br from-[#0f172a] via-[#020617] to-black p-3">

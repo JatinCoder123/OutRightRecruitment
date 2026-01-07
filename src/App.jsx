@@ -1,77 +1,33 @@
 import {
   createBrowserRouter,
+  Outlet,
   RouterProvider,
-  useNavigate,
 } from "react-router-dom";
-import RootLayout from "./layouts/RootLayout";
 import RegisterPage from "./pages/RegisterPage";
-import Aptitude from "./pages/Aptitude";
-import RoleSpecifixTest from "./pages/RoleSpecifixTest";
-import DsaTest from "./pages/DsaTest.jsx";
 import { useDispatch } from "react-redux";
-import { getJobRoles } from "./store/slices/jobRoleSlice.js";
+import { getJobRoles } from "./store/slices/jobRole.js";
 import { useEffect } from "react";
-import {
-  getCandidate,
-  getCandidateSkills,
-} from "./store/slices/candidateSlice.js";
-import StartPage from "./pages/StartPage.jsx";
-import Testing from "./pages/Testing.jsx";
-import EndScreen from "./pages/EndScreen.jsx";
-import ErrorBoundary from "./components/ErrorBoundary.jsx";
+import { getCandidate } from "./store/slices/candidate.js";
 import { ToastContainer } from "react-toastify";
 import Terms from "./components/Terms.jsx";
 import TestPage from "./pages/TestPage.jsx";
 
 const router = createBrowserRouter([
   {
-    path: "/register",
-    element: <RegisterPage />,
-  },
-  {
-    path: "/terms",
-    element: <Terms />,
-  },
-  {
-    path: "/test",
-    element: <TestPage />,
-  },
-  {
     path: "/",
-    element: <RootLayout />,
+    element: <Outlet />,
     children: [
       {
-        index: true, // default child route for "/"
-        element: <></>,
+        index: true,
+        element: <RegisterPage />,
       },
       {
-        path: "startTest",
-        element: <StartPage />,
+        path: "/terms",
+        element: <Terms />,
       },
       {
-        path: "aptitude",
-        element: <Aptitude />,
-      },
-
-      {
-        path: "roleBasedTest",
-        element: <RoleSpecifixTest />,
-      },
-      {
-        path: "dsa",
-        element: (
-          <ErrorBoundary>
-            <DsaTest />
-          </ErrorBoundary>
-        ),
-      },
-      {
-        path: "testended",
-        element: <EndScreen />,
-      },
-      {
-        path: "testing",
-        element: <Testing />,
+        path: "/test",
+        element: <TestPage />,
       },
     ],
   },
@@ -84,7 +40,6 @@ export default function App() {
     const id = localStorage.getItem("candidate_id");
     if (id) {
       dispatch(getCandidate(id));
-      dispatch(getCandidateSkills(id));
     }
   }, [dispatch]);
 
@@ -101,7 +56,7 @@ export default function App() {
         pauseOnFocusLoss
         draggable
         pauseOnHover
-        theme="dark" // you can change to "light"
+        theme="dark"
       />
     </>
   );

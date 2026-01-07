@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const roundsData = [
     {
@@ -34,6 +34,32 @@ const roundsData = [
 
 export default function TestPage() {
     const [currentQuestion, setCurrentQuestion] = useState(3);
+    useEffect(() => {
+        const onVisibilityChange = () => {
+            if (document.hidden) {
+                alert("Tab switched");
+            }
+        };
+
+        document.addEventListener("visibilitychange", onVisibilityChange);
+
+        return () =>
+            document.removeEventListener("visibilitychange", onVisibilityChange);
+    }, []);
+    useEffect(() => {
+        const onBeforeUnload = (e) => {
+            alert("Refresh or close attempt");
+            e.preventDefault();
+            e.returnValue = "";
+        };
+
+        window.addEventListener("beforeunload", onBeforeUnload);
+
+        return () =>
+            window.removeEventListener("beforeunload", onBeforeUnload);
+    }, []);
+
+
 
     return (
         <div className="h-screen flex flex-col bg-gradient-to-br from-[#020617] via-[#020617] to-black text-gray-200">

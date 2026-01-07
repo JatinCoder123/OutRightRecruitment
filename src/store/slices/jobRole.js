@@ -10,7 +10,6 @@ const jobRoleSlice = createSlice({
   },
   reducers: {
     getJobRolesRequest(state) {
-      state.roles = [];
       state.error = null;
       state.loading = true;
     },
@@ -20,14 +19,11 @@ const jobRoleSlice = createSlice({
       state.loading = false;
     },
     getJobRolesFailed(state, action) {
-      state.roles = state.roles;
       state.error = action.payload;
       state.loading = false;
     },
-
     clearAllErrors(state) {
       state.error = null;
-      state.roles = state.roles;
     },
   },
 });
@@ -51,3 +47,4 @@ export const getJobRoles = () => {
   };
 };
 export default jobRoleSlice.reducer;
+export const jobRoleAction = jobRoleSlice.actions;
