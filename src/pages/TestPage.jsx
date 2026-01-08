@@ -34,33 +34,43 @@ const roundsData = [
 
 export default function TestPage() {
     const [currentQuestion, setCurrentQuestion] = useState(3);
+
     useEffect(() => {
+        const initialWidth = window.innerWidth;
+        let resizeTimeout = null;
+        const onResize = () => {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(() => {
+                const widthDiff = Math.abs(window.innerWidth - initialWidth);
+                if (widthDiff > 100) {
+                    alert("Possible split screen or resize detected");
+                }
+            }, 300);
+        };
         const onVisibilityChange = () => {
             if (document.hidden) {
                 alert("Tab switched");
             }
         };
-
-        document.addEventListener("visibilitychange", onVisibilityChange);
-
-        return () =>
-            document.removeEventListener("visibilitychange", onVisibilityChange);
-    }, []);
-    useEffect(() => {
         const onBeforeUnload = (e) => {
-            alert("Refresh or close attempt");
+            console.log("Refresh")
             e.preventDefault();
             e.returnValue = "";
         };
 
+        document.addEventListener("visibilitychange", onVisibilityChange);
         window.addEventListener("beforeunload", onBeforeUnload);
+        window.addEventListener("resize", onResize);
 
-        return () =>
+
+
+        return () => {
+            document.removeEventListener("visibilitychange", onVisibilityChange);
             window.removeEventListener("beforeunload", onBeforeUnload);
+            window.removeEventListener("resize", onResize);
+
+        };
     }, []);
-
-
-
     return (
         <div className="h-screen flex flex-col bg-gradient-to-br from-[#020617] via-[#020617] to-black text-gray-200">
 

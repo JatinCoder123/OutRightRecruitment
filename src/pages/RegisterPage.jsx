@@ -16,11 +16,10 @@ export default function Login() {
     firstName: { value: "", isValid: true },
     lastName: { value: "", isValid: true },
     email: { value: "", isValid: true },
-    jobRole: { value: "", isValid: true },
+    jobRole: { value: { title: "", id: null }, isValid: true },
     experience: { value: "", isValid: true },
     skills: { value: [], isValid: true },
   });
-  const [jobRoleIndex, setJobRoleIndex] = useState(null);
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const [isRoleOpen, setIsRoleOpen] = useState(false);
@@ -37,16 +36,14 @@ export default function Login() {
       },
     }));
   };
-  const jobRoleHandler = (title, index) => {
+  const jobRoleHandler = (title, id) => {
     setFormData((prev) => ({
       ...prev,
       jobRole: {
-        ...prev.jobRole,
-        value: title,
+        value: { title, id },
         isValid: true,
       },
     }));
-    setJobRoleIndex(index);
     setIsRoleOpen(false);
   }
 
@@ -85,7 +82,7 @@ export default function Login() {
       }));
       invalid = true;
     }
-    if (!validateInput(formData.jobRole.value, "text")) {
+    if (!validateInput(formData.jobRole.value.title, "text")) {
       setFormData((prev) => ({
         ...prev,
         jobRole: {
@@ -134,7 +131,7 @@ export default function Login() {
       firstName: formData.firstName.value.trim(),
       lastName: formData.lastName.value?.trim() || "", // optional
       email: formData.email.value.trim(),
-      jobRole: formData.jobRole.value.trim(),
+      jobRole: formData.jobRole.value.id,
       skills: formData.skills.value,
       experience: exp,
     };
@@ -217,8 +214,8 @@ export default function Login() {
                   onClick={() => setIsRoleOpen((prev) => !prev)}
                   className={`input-dark w-full flex items-center  border-[1px] border-white/10 bg-[var(--color-input-bg)]  justify-between ${formData.jobRole.isValid ? "bg-[var(--color-input-bg)]  text-[var(--color-text-primary)] border-[1px] border-white/10 placeholder-[var(--color-text-muted)]" : "bg-red-400 border-red-300 text-white placeholder-white"}`}
                 >
-                  <span className={formData.jobRole.value ? "text-white" : "text-gray-300"}>
-                    {formData.jobRole.value || "Select Job Role"}
+                  <span className={formData.jobRole.value.title ? "text-white" : "text-gray-300"}>
+                    {formData.jobRole.value.title || "Select Job Role"}
                   </span>
 
                   <svg
@@ -249,7 +246,7 @@ export default function Login() {
                       <button
                         key={role.id}
                         type="button"
-                        onClick={jobRoleHandler.bind(null, role.title, index)}
+                        onClick={jobRoleHandler.bind(null, role.title, role.id)}
                         className={`w-full px-4 py-3 text-left text-sm transition
                           ${formData.jobRole.value === role.title
                             ? "bg-indigo-600 text-white"
@@ -274,14 +271,14 @@ export default function Login() {
                 onChange={onChangeHandler}
               />
               {/* Language / Skill Selection */}
-              {jobRoleIndex !== null && (
+              {formData.jobRole.value.id !== null && (
                 <div className="mt-2 flex flex-col items-center">
                   <p className="text-white font-medium mb-3">
                     Choose your preferred skills
                   </p>
 
                   <div className="flex flex-wrap gap-3">
-                    {JSON.parse(roles[jobRoleIndex].role_skills)?.map(
+                    {JSON.parse(roles.find((role) => role.id === formData.jobRole.value.id)?.role_skills)?.map(
                       (lang) => {
                         const active = formData.skills.value.includes(lang);
                         return (

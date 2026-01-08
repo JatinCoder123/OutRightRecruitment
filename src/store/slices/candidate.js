@@ -62,7 +62,8 @@ export const register = (
   last_name = null,
   email,
   role_id,
-  experience
+  experience,
+  skills
 ) => {
   return async (dispatch) => {
     dispatch(candidateSlice.actions.registerRequest());
@@ -70,7 +71,7 @@ export const register = (
     try {
       const { data } = await axios.post(
         `${BACKEND_URL}/Candidate.php?endpoint=addCandidate`,
-        { first_name, last_name, email, role_id, experience },
+        { first_name, last_name, email, role_id, experience, skills },
         {
           withCredentials: true,
           headers: { "Content-Type": "application/json" },
@@ -79,12 +80,11 @@ export const register = (
 
       if (data.candidate && data.candidate.id) {
         console.log("User Register :", data.candidate.id);
-        localStorage.setItem("candidate_id", data.candidate.id); // ✅ should work now
+        localStorage.setItem("candidate_id", data.candidate.id);
         dispatch(candidateSlice.actions.registerSuccess(data.candidate));
       } else {
-        throw new Error("Candidate ID missing in response");
+        throw new Error("Register Failed! Please try again.");
       }
-
       dispatch(candidateSlice.actions.clearAllErrors());
     } catch (error) {
       console.error("Register Error:", error);
