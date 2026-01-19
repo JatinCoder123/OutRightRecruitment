@@ -33,13 +33,13 @@ export const getJobRoles = () => {
     dispatch(jobRoleSlice.actions.getJobRolesRequest());
     try {
       const { data } = await axios.get(
-        `${BACKEND_URL}/JobRole.php?endpoint=listRoles`,
+        `${BACKEND_URL}/roles/get_roles`,
         {
           withCredentials: true,
         }
       );
       console.log("jobRole", data);
-      dispatch(jobRoleSlice.actions.getJobRolesSuccess(data));
+      dispatch(jobRoleSlice.actions.getJobRolesSuccess(data.roles));
       dispatch(jobRoleSlice.actions.clearAllErrors());
     } catch (error) {
       dispatch(jobRoleSlice.actions.getJobRolesFailed(error.message));

@@ -7,16 +7,18 @@ import { validateInput } from "../assets/assests";
 import { Input } from "../components/Input";
 import MainButton from "../components/MainButton";
 import { useNavigate } from "react-router-dom";
-import { getJobRoles } from "../store/slices/jobRole";
+import { getJobRoles, jobRoleAction } from "../store/slices/jobRole";
 import Terms from "../components/Terms";
 import TestPage from "./TestPage";
+import { candidateAction, register } from "../store/slices/candidate";
+import LoadingPage from "../components/LoadingPage";
 
 export default function Login() {
   const [formData, setFormData] = useState({
     firstName: { value: "", isValid: true },
     lastName: { value: "", isValid: true },
     email: { value: "", isValid: true },
-    jobRole: { value: { title: "", id: null }, isValid: true },
+    jobRole: { value: { title: "", id: null, is_dsa: false }, isValid: true },
     experience: { value: "", isValid: true },
     skills: { value: [], isValid: true },
   });
@@ -24,7 +26,7 @@ export default function Login() {
   const dispatch = useDispatch();
   const [isRoleOpen, setIsRoleOpen] = useState(false);
   const { roles = [], loading: jobLoading, error: jobError } = useSelector((state) => state.jobRoles);
-  const { isRegisterd, isStarted } = useSelector((state) => state.candidate);
+  const { loading: candidateLoading, error: candidateError, message, creating, candidate } = useSelector((state) => state.candidate);
   const toggleLanguage = (lang) => {
     setFormData((prev) => ({
       ...prev,
@@ -36,11 +38,11 @@ export default function Login() {
       },
     }));
   };
-  const jobRoleHandler = (title, id) => {
+  const jobRoleHandler = (title, id, is_dsa) => {
     setFormData((prev) => ({
       ...prev,
       jobRole: {
-        value: { title, id },
+        value: { title, id, is_dsa },
         isValid: true,
       },
     }));
@@ -57,8 +59,17 @@ export default function Login() {
       },
     }));
   };
+  useEffect(() => {
+    if (message) {
+      toast.success(message);
+      dispatch(candidateAction.clearAllMessages());
+    }
+    if (candidateError) {
+      toast.error(candidateError);
+      dispatch(candidateAction.clearAllErrors());
+    }
+  }, [message, candidateError]);
   const handleSubmit = () => {
-    navigate("/terms");
     let invalid = false;
     if (!validateInput(formData.firstName.value, "text")) {
       setFormData((prev) => ({
@@ -128,27 +139,32 @@ export default function Login() {
       return;
     }
     const payload = {
-      firstName: formData.firstName.value.trim(),
-      lastName: formData.lastName.value?.trim() || "", // optional
+      first_name: formData.firstName.value.trim(),
+      last_name: formData.lastName.value?.trim() || "", // optional
       email: formData.email.value.trim(),
-      jobRole: formData.jobRole.value.id,
+      role_id: formData.jobRole.value.id,
       skills: formData.skills.value,
+      is_dsa: formData.jobRole.value.is_dsa,
       experience: exp,
     };
 
     console.log("Candidate Payload:", payload);
+    dispatch(register(payload));
   };
   useEffect(() => {
     if (jobError) {
       toast.error(jobError);
       dispatch(jobRoleAction.clearAllErrors());
-      dispatch(getJobRoles());
+      dispatch(getJobRoles())
     }
   }, [jobError, dispatch]);
-  if (isRegisterd && isStarted) {
+  if (candidateLoading) {
+    return <LoadingPage />;
+  }
+  if (candidate && candidate.is_test_started) {
     return <TestPage />
   }
-  if (isRegisterd) {
+  if (candidate) {
     return <Terms />
   }
 
@@ -246,9 +262,9 @@ export default function Login() {
                       <button
                         key={role.id}
                         type="button"
-                        onClick={jobRoleHandler.bind(null, role.title, role.id)}
+                        onClick={jobRoleHandler.bind(null, role.title, role.id, role.dsa_level !== null ? 1 : 0)}
                         className={`w-full px-4 py-3 text-left text-sm transition
-                          ${formData.jobRole.value === role.title
+                          ${formData.jobRole.value.title === role.title
                             ? "bg-indigo-600 text-white"
                             : "text-gray-300 hover:bg-white/10"
                           }`}
@@ -278,7 +294,7 @@ export default function Login() {
                   </p>
 
                   <div className="flex flex-wrap gap-3">
-                    {JSON.parse(roles.find((role) => role.id === formData.jobRole.value.id)?.role_skills)?.map(
+                    {roles.find((role) => role.id === formData.jobRole.value.id)?.role_skills?.map(
                       (lang) => {
                         const active = formData.skills.value.includes(lang);
                         return (
@@ -302,7 +318,7 @@ export default function Login() {
                 </div>
               )}
               {/* Submit */}
-              <MainButton onClick={handleSubmit}>
+              <MainButton onClick={handleSubmit} loading={creating} loadingText={"Registering..."}>
                 Register
               </MainButton>
             </div>

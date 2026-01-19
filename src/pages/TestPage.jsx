@@ -1,40 +1,31 @@
 import { useEffect, useState } from "react";
+import { getCurrentQuestion } from "../store/slices/questions";
+import { useDispatch, useSelector } from "react-redux";
 
 const roundsData = [
     {
         id: 1,
-        title: "Round 1",
-        status: "completed",
-        questions: Array(10).fill("answered"),
+        title: "Aptitude Round",
+        status: "active",
     },
     {
         id: 2,
-        title: "Round 2",
-        status: "active",
-        questions: [
-            "answered",
-            "answered",
-            "answered",
-            "current",
-            "unseen",
-            "unseen",
-            "unseen",
-            "unseen",
-            "unseen",
-            "unseen",
-        ],
+        title: "Role Specific Round",
+        status: "locked",
     },
     {
         id: 3,
-        title: "Round 3",
+        title: "DSA Round",
         status: "locked",
-        questions: Array(10).fill("locked"),
     },
 ];
 
 export default function TestPage() {
-    const [currentQuestion, setCurrentQuestion] = useState(3);
-
+    const { count, loading, error, currentQuestions } = useSelector((state) => state.questions);
+    const { candidate } = useSelector((state) => state.candidate);
+    const [roundsInfo, setRoundsInfo] = useState(roundsData);
+    const [activeQuestion, setActiveQuestion] = useState(0);
+    const dispatch = useDispatch()
     useEffect(() => {
         const initialWidth = window.innerWidth;
         let resizeTimeout = null;
@@ -71,6 +62,9 @@ export default function TestPage() {
 
         };
     }, []);
+    useEffect(() => {
+        dispatch(getCurrentQuestion());
+    }, []);
     return (
         <div className="h-screen flex flex-col bg-gradient-to-br from-[#020617] via-[#020617] to-black text-gray-200">
 
@@ -80,7 +74,7 @@ export default function TestPage() {
                     Skill Assessment Test
                 </h1>
                 <div className="flex items-center gap-6 text-sm">
-                    <span className="text-gray-400">Round 2 of 3</span>
+                    <span className="text-gray-400">Round {candidate?.current_round} of 3</span>
                     <span className="font-mono bg-white/10 px-3 py-1 rounded text-white">
                         ⏱ 12:45
                     </span>
@@ -124,10 +118,10 @@ export default function TestPage() {
                     </h2>
 
                     <div className="grid grid-cols-5 gap-2">
-                        {roundsData[1].questions.map((status, idx) => (
+                        {currentQuestions.map((status, idx) => (
                             <button
                                 key={idx}
-                                onClick={() => setCurrentQuestion(idx)}
+                                onClick={() => setActiveQuestion(idx)}
                                 className={`h-9 w-9 rounded-md text-xs font-medium transition
                   ${status === "answered" &&
                                     "bg-green-500/20 text-green-400"
@@ -162,7 +156,7 @@ export default function TestPage() {
 
                         <div className="flex justify-between items-center mb-4">
                             <h2 className="text-sm text-gray-400">
-                                Question {currentQuestion + 1} / 10
+                                Question {activeQuestion + 1} / {count}
                             </h2>
                             <button className="text-sm text-blue-400 hover:underline">
                                 ⭐ Mark for Review
@@ -170,16 +164,11 @@ export default function TestPage() {
                         </div>
 
                         <p className="text-lg font-medium mb-6 text-white">
-                            What does the <code className="text-blue-400">map()</code> method do in JavaScript?
+                            {currentQuestions[activeQuestion]?.question}
                         </p>
 
                         <div className="space-y-3">
-                            {[
-                                "Iterates and modifies the original array",
-                                "Creates a new array by applying a function",
-                                "Filters elements from an array",
-                                "Stops execution after iteration",
-                            ].map((opt, idx) => (
+                            {currentQuestions[activeQuestion]?.options.map((opt, idx) => (
                                 <label
                                     key={idx}
                                     className="flex items-center gap-3 p-3 border border-white/10 rounded-lg cursor-pointer hover:bg-white/10 transition"
@@ -192,10 +181,10 @@ export default function TestPage() {
 
                         {/* Actions */}
                         <div className="flex justify-between mt-8">
-                            <button className="px-5 py-2 border border-white/10 rounded-lg hover:bg-white/10 transition">
+                            <button disabled={activeQuestion === 0} onClick={() => setActiveQuestion(activeQuestion - 1)} className="px-5 py-2 border border-white/10 rounded-lg hover:bg-white/10 transition">
                                 ⬅ Previous
                             </button>
-                            <button className="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+                            <button disabled={activeQuestion === count - 1} onClick={() => setActiveQuestion(activeQuestion + 1)} className="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
                                 Next ➡
                             </button>
                         </div>

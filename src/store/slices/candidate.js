@@ -5,47 +5,65 @@ const candidateSlice = createSlice({
   name: "candidate",
   initialState: {
     loading: false,
-    candidate: {},
-    isRegisterd: localStorage.getItem("candidate_id") ? true : false,
-    isStarted: localStorage.getItem("is_started") ? true : false,
+    candidate: null,
     error: null,
+    creating: false,
+    updating: false,
     message: null,
   },
   reducers: {
     registerRequest(state) {
-      state.loading = true;
-      state.candidate = {};
-      state.isRegisterd = false;
+      state.creating = true;
+      state.candidate = null;
+      state.message = null;
       state.error = null;
     },
     registerSuccess(state, action) {
-      state.loading = false;
-      state.candidate = action.payload;
-      state.isRegisterd = true;
+      state.creating = false;
+      state.candidate = action.payload.candidate;
+      state.message = action.payload.message;
       state.error = null;
     },
     registerFailed(state, action) {
-      state.loading = false;
-      state.isRegisterd = false;
-      state.candidate = {};
+      state.creating = false;
+      state.candidate = null;
+      state.message = null;
       state.error = action.payload;
     },
     loadCandidateRequest(state) {
       state.loading = true;
-      state.isRegisterd = false;
       state.candidate = state.candidate;
+      state.message = null;
       state.error = null;
     },
     loadCandidateSuccess(state, action) {
       state.loading = false;
-      state.isRegisterd = true;
       state.candidate = action.payload;
+      state.message = null;
       state.error = null;
     },
     loadCandidateFailed(state, action) {
       state.loading = false;
-      state.isRegisterd = false;
       state.candidate = state.candidate;
+      state.message = null;
+      state.error = action.payload;
+    },
+    updateCandidateRequest(state) {
+      state.updating = true;
+      state.candidate = state.candidate;
+      state.message = null;
+      state.error = null;
+    },
+    updateCandidateSuccess(state, action) {
+      state.updating = false;
+      state.candidate = action.payload;
+      state.message = null;
+      state.error = null;
+    },
+    updateCandidateFailed(state, action) {
+      state.updating = false;
+      state.candidate = state.candidate;
+      state.message = null;
       state.error = action.payload;
     },
     clearAllErrors(state) {
@@ -57,34 +75,21 @@ const candidateSlice = createSlice({
   },
 });
 
-export const register = (
-  first_name,
-  last_name = null,
-  email,
-  role_id,
-  experience,
-  skills
-) => {
+export const register = (candidate) => {
   return async (dispatch) => {
     dispatch(candidateSlice.actions.registerRequest());
 
     try {
       const { data } = await axios.post(
-        `${BACKEND_URL}/Candidate.php?endpoint=addCandidate`,
-        { first_name, last_name, email, role_id, experience, skills },
+        `${BACKEND_URL}/candidates/register`,
+        { ...candidate },
         {
           withCredentials: true,
           headers: { "Content-Type": "application/json" },
         }
       );
-
-      if (data.candidate && data.candidate.id) {
-        console.log("User Register :", data.candidate.id);
-        localStorage.setItem("candidate_id", data.candidate.id);
-        dispatch(candidateSlice.actions.registerSuccess(data.candidate));
-      } else {
-        throw new Error("Register Failed! Please try again.");
-      }
+      console.log("User Register :", data);
+      dispatch(candidateSlice.actions.registerSuccess({ candidate, message: data.message }));
       dispatch(candidateSlice.actions.clearAllErrors());
     } catch (error) {
       console.error("Register Error:", error);
@@ -93,24 +98,44 @@ export const register = (
   };
 };
 
-export const getCandidate = (id) => {
+export const getCandidate = () => {
   return async (dispatch) => {
-    console.log("Getting Candidate with id", id);
     dispatch(candidateSlice.actions.loadCandidateRequest());
     try {
       const { data } = await axios.get(
-        `${BACKEND_URL}/Candidate.php?endpoint=getCandidate&id=${id}`,
+        `${BACKEND_URL}/candidates/get`,
         {
           withCredentials: true,
           headers: { "Content-Type": "application/json" },
         }
       );
-      console.log("Get Candidate", data.candidate);
+      console.log("Get Candidate", data);
 
       dispatch(candidateSlice.actions.loadCandidateSuccess(data.candidate));
       dispatch(candidateSlice.actions.clearAllErrors());
     } catch (error) {
       dispatch(candidateSlice.actions.loadCandidateFailed(error.message));
+    }
+  };
+};
+export const updateCandidate = (candidate) => {
+  return async (dispatch, getState) => {
+    dispatch(candidateSlice.actions.updateCandidateRequest());
+    try {
+      const { data } = await axios.put(
+        `${BACKEND_URL}/candidates/update_candidate`,
+        { ...candidate },
+        {
+          withCredentials: true,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+      console.log("Update Candidate", data);
+
+      dispatch(candidateSlice.actions.updateCandidateSuccess({ candidate: { ...getState().candidate.candidate, ...candidate }, message: data.message }));
+      dispatch(candidateSlice.actions.clearAllErrors());
+    } catch (error) {
+      dispatch(candidateSlice.actions.updateCandidateFailed(error.message));
     }
   };
 };

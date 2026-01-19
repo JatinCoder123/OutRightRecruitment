@@ -1,2 +1,2 @@
 export const BACKEND_URL =
-  "https://dev.outrightcrm.in/OutRightRecruitment/routes";
+  "http://localhost:3001/api";

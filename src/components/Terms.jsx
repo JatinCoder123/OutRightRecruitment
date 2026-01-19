@@ -1,15 +1,21 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { AlertTriangle, Clock, Layers, Info } from "lucide-react";
+import { useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
+import { updateCandidate } from "../store/slices/candidate";
 
 export default function Terms({
-    onStart,
-    isDSAEligible = true,
     aptitudeQuestions = 20,
     roleQuestions = 15,
     dsaQuestions = 10,
 }) {
     const [agreed, setAgreed] = useState(false);
+    const { candidate, updating } = useSelector((state) => state.candidate);
+    const dispatch = useDispatch();
+    const onStart = () => {
+        dispatch(updateCandidate({ is_test_started: true }));
+    };
     useEffect(() => {
         window.history.pushState({ page: "terms" }, "", window.location.href);
         const handleBack = (event) => {
@@ -89,7 +95,7 @@ export default function Terms({
                             <strong>Round 2 – Role-Based Assessment:</strong> {roleQuestions} questions
                         </li>
 
-                        {isDSAEligible && (
+                        {candidate.is_dsa && (
                             <li>
                                 <strong>Round 3 – DSA Assessment:</strong> {dsaQuestions} questions
                             </li>
@@ -128,15 +134,15 @@ export default function Terms({
                     </label>
 
                     <button
-                        disabled={!agreed}
+                        disabled={!agreed || updating}
                         onClick={onStart}
                         className={`w-[200px] py-3 rounded-xl font-semibold transition-all
-              ${agreed
+              ${agreed && !updating
                                 ? "bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg"
                                 : "bg-gray-700 text-gray-400 cursor-not-allowed"
                             }`}
                     >
-                        Start Test
+                        {updating ? "Starting..." : "Start Test"}
                     </button>
                 </div>
 

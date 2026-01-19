@@ -37,10 +37,7 @@ export default function App() {
   const dispatch = useDispatch();
   useEffect(() => {
     dispatch(getJobRoles());
-    const id = localStorage.getItem("candidate_id");
-    if (id) {
-      dispatch(getCandidate(id));
-    }
+    dispatch(getCandidate());
   }, [dispatch]);
 
   return (
