@@ -6,6 +6,26 @@ const candidateSlice = createSlice({
   initialState: {
     loading: false,
     candidate: null,
+    rounds: [
+      {
+        id: 1,
+        title: "Aptitude Round",
+        status: "active",
+        duration: 20,
+      },
+      {
+        id: 2,
+        title: "Role Specific Round",
+        status: "locked",
+        duration: 20,
+      },
+      {
+        id: 3,
+        title: "DSA Round",
+        status: "locked",
+        duration: 20,
+      },
+    ],
     error: null,
     creating: false,
     updating: false,

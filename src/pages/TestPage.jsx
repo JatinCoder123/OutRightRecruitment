@@ -1,80 +1,73 @@
 import { useEffect, useState } from "react";
-import { getCurrentQuestion } from "../store/slices/questions";
 import { useDispatch, useSelector } from "react-redux";
-
-const roundsData = [
-    {
-        id: 1,
-        title: "Aptitude Round",
-        status: "active",
-    },
-    {
-        id: 2,
-        title: "Role Specific Round",
-        status: "locked",
-    },
-    {
-        id: 3,
-        title: "DSA Round",
-        status: "locked",
-    },
-];
+import { getCurrentQuestion, questionsAction } from "../store/slices/questions";
+import TestPageSidebar from "../components/TestPageSidebar";
+import { CgMenuGridR } from "react-icons/cg";
+import { Star, StarOff } from "lucide-react";
+import { updateCandidate } from "../store/slices/candidate";
 
 export default function TestPage() {
-    const { count, loading, error, currentQuestions } = useSelector((state) => state.questions);
+    const dispatch = useDispatch();
+
+    const { count, currentQuestions } = useSelector(
+        (state) => state.questions
+    );
     const { candidate } = useSelector((state) => state.candidate);
-    const [roundsInfo, setRoundsInfo] = useState(roundsData);
+
+    const [open, setOpen] = useState(false);
+    const [submitModal, setSubmitModal] = useState(false);
     const [activeQuestion, setActiveQuestion] = useState(0);
-    const dispatch = useDispatch()
-    useEffect(() => {
-        const initialWidth = window.innerWidth;
-        let resizeTimeout = null;
-        const onResize = () => {
-            clearTimeout(resizeTimeout);
-            resizeTimeout = setTimeout(() => {
-                const widthDiff = Math.abs(window.innerWidth - initialWidth);
-                if (widthDiff > 100) {
-                    alert("Possible split screen or resize detected");
-                }
-            }, 300);
-        };
-        const onVisibilityChange = () => {
-            if (document.hidden) {
-                alert("Tab switched");
-            }
-        };
-        const onBeforeUnload = (e) => {
-            console.log("Refresh")
-            e.preventDefault();
-            e.returnValue = "";
-        };
 
-        document.addEventListener("visibilitychange", onVisibilityChange);
-        window.addEventListener("beforeunload", onBeforeUnload);
-        window.addEventListener("resize", onResize);
-
-
-
-        return () => {
-            document.removeEventListener("visibilitychange", onVisibilityChange);
-            window.removeEventListener("beforeunload", onBeforeUnload);
-            window.removeEventListener("resize", onResize);
-
-        };
-    }, []);
+    /* ================= FETCH QUESTIONS ================= */
     useEffect(() => {
         dispatch(getCurrentQuestion());
-    }, []);
+    }, [dispatch]);
+
+    /* ================= OPTION SELECT ================= */
+    const handleOptionSelect = (option) => {
+        const current = currentQuestions[activeQuestion];
+
+        // Must always have one answer
+        if (current?.candidate_answer === option) return;
+
+        dispatch(
+            questionsAction.updateQuestion({
+                index: activeQuestion,
+                data: {
+                    status: "answered",
+                    candidate_answer: option,
+                },
+            })
+        );
+    };
+
+    /* ================= SUBMIT ================= */
+    const handleSubmitConfirm = () => {
+        let nextRound = candidate?.current_round;
+        if (candidate.current_round === 1 && candidate.role_result == null) {
+            nextRound = 2;
+        }
+        else if (candidate.current_round === 2 && candidate.dsa_result == null && candidate.is_dsa) {
+            nextRound = 3;
+        }
+        const candidateData = {
+            current_round: nextRound,
+        }
+        dispatch(updateCandidate(candidateData));
+        setSubmitModal(false);
+    };
+
     return (
         <div className="h-screen flex flex-col bg-gradient-to-br from-[#020617] via-[#020617] to-black text-gray-200">
-
             {/* ================= HEADER ================= */}
             <header className="h-16 bg-[#020617]/80 backdrop-blur border-b border-white/10 flex items-center justify-between px-6">
                 <h1 className="text-lg font-semibold text-white">
-                    Skill Assessment Test
+                    {candidate?.first_name} {candidate?.last_name}
                 </h1>
                 <div className="flex items-center gap-6 text-sm">
-                    <span className="text-gray-400">Round {candidate?.current_round} of 3</span>
+                    <span className="text-gray-400">
+                        Round {candidate?.current_round} of {candidate?.is_dsa ? 3 : 2}
+                    </span>
                     <span className="font-mono bg-white/10 px-3 py-1 rounded text-white">
                         ⏱ 12:45
                     </span>
@@ -82,84 +75,77 @@ export default function TestPage() {
             </header>
 
             {/* ================= BODY ================= */}
-            <div className="flex flex-1 overflow-hidden">
+            <div className="flex flex-1 relative overflow-hidden">
+                {/* Mobile Toggle */}
+                <button
+                    onClick={() => setOpen(true)}
+                    className="lg:hidden absolute top-4 left-4 z-50 p-2 bg-orange-600 text-white rounded-lg "
+                >
+                    <CgMenuGridR size={20} />
+                </button>
 
-                {/* ============ SIDEBAR ============ */}
-                <aside className="w-72 bg-[#020617]/70 backdrop-blur border-r border-white/10 p-4 overflow-y-auto">
+                {/* Overlay */}
+                {open && (
+                    <div
+                        onClick={() => setOpen(false)}
+                        className="lg:hidden fixed inset-0 bg-black/50 z-40"
+                    />
+                )}
 
-                    {/* Rounds */}
-                    <h2 className="text-xs font-semibold text-gray-400 mb-2 tracking-wider">
-                        ROUNDS
-                    </h2>
+                {/* Sidebar */}
+                <div
+                    className={`
+                        fixed lg:static top-0 left-0 h-full z-50
+                        transform transition-transform duration-300
+                        ${open ? "translate-x-0" : "-translate-x-full"}
+                        lg:translate-x-0
+                    `}
+                >
+                    <TestPageSidebar
+                        activeQuestion={activeQuestion}
+                        setActiveQuestion={setActiveQuestion}
+                        setOpen={setOpen}
+                    />
+                </div>
 
-                    <div className="space-y-2 mb-6">
-                        {roundsData.map((round) => (
-                            <div
-                                key={round.id}
-                                className={`flex items-center justify-between px-3 py-2 rounded-lg text-sm
-                ${round.status === "active"
-                                        ? "bg-blue-500/10 text-blue-400 border border-blue-500/30"
-                                        : "bg-white/5 text-gray-300"
-                                    }`}
-                            >
-                                <span>{round.title}</span>
-                                <span>
-                                    {round.status === "completed" && "✔"}
-                                    {round.status === "active" && "⏳"}
-                                    {round.status === "locked" && "🔒"}
-                                </span>
-                            </div>
-                        ))}
-                    </div>
-
-                    {/* Question Navigator */}
-                    <h2 className="text-xs font-semibold text-gray-400 mb-2 tracking-wider">
-                        QUESTIONS
-                    </h2>
-
-                    <div className="grid grid-cols-5 gap-2">
-                        {currentQuestions.map((status, idx) => (
-                            <button
-                                key={idx}
-                                onClick={() => setActiveQuestion(idx)}
-                                className={`h-9 w-9 rounded-md text-xs font-medium transition
-                  ${status === "answered" &&
-                                    "bg-green-500/20 text-green-400"
-                                    }
-                  ${status === "current" &&
-                                    "bg-blue-600 text-white"
-                                    }
-                  ${status === "unseen" &&
-                                    "bg-white/10 text-gray-400"
-                                    }
-                  ${status === "locked" &&
-                                    "bg-white/5 text-gray-600 cursor-not-allowed"
-                                    }
-                `}
-                            >
-                                {idx + 1}
-                            </button>
-                        ))}
-                    </div>
-
-                    {/* Legend */}
-                    <div className="mt-6 text-xs text-gray-400 space-y-1">
-                        <p>✔ Answered</p>
-                        <p>⏳ Current</p>
-                        <p>⬜ Unseen</p>
-                    </div>
-                </aside>
-
-                {/* ============ MAIN QUESTION AREA ============ */}
-                <main className="flex-1 p-8 overflow-y-auto">
+                {/* ================= MAIN ================= */}
+                <main className="flex-1 p-6 lg:p-10 overflow-y-auto flex flex-col gap-10 lg:mt-2 mt-10">
                     <div className="max-w-3xl mx-auto bg-white/5 backdrop-blur border border-white/10 p-6 rounded-xl shadow-lg">
-
                         <div className="flex justify-between items-center mb-4">
                             <h2 className="text-sm text-gray-400">
                                 Question {activeQuestion + 1} / {count}
                             </h2>
-                            <button className="text-sm text-blue-400 hover:underline">
-                                ⭐ Mark for Review
+
+                            <button
+                                onClick={() =>
+                                    dispatch(
+                                        questionsAction.updateQuestion({
+                                            index: activeQuestion,
+                                            data: {
+                                                mark:
+                                                    !currentQuestions[activeQuestion]
+                                                        ?.mark,
+                                            },
+                                        })
+                                    )
+                                }
+                                className="text-sm text-blue-400 flex items-center gap-2 hover:underline"
+                            >
+                                {currentQuestions[activeQuestion]?.mark ? (
+                                    <StarOff
+                                        className="text-yellow-500"
+                                        size={15}
+                                    />
+                                ) : (
+                                    <Star
+                                        className="text-yellow-500"
+                                        size={15}
+                                    />
+                                )}
+                                {currentQuestions[activeQuestion]?.mark
+                                    ? "Unmark"
+                                    : "Mark"}{" "}
+                                for Review
                             </button>
                         </div>
 
@@ -167,30 +153,103 @@ export default function TestPage() {
                             {currentQuestions[activeQuestion]?.question}
                         </p>
 
+                        {/* ================= OPTIONS ================= */}
                         <div className="space-y-3">
-                            {currentQuestions[activeQuestion]?.options.map((opt, idx) => (
-                                <label
-                                    key={idx}
-                                    className="flex items-center gap-3 p-3 border border-white/10 rounded-lg cursor-pointer hover:bg-white/10 transition"
-                                >
-                                    <input type="radio" name="answer" className="accent-blue-500" />
-                                    <span className="text-gray-200">{opt}</span>
-                                </label>
-                            ))}
+                            {currentQuestions[activeQuestion]?.options?.map(
+                                (opt, idx) => {
+                                    const isSelected =
+                                        currentQuestions[activeQuestion]
+                                            ?.candidate_answer === opt;
+
+                                    return (
+                                        <div
+                                            key={idx}
+                                            onClick={() =>
+                                                handleOptionSelect(opt)
+                                            }
+                                            className={`p-4 border rounded-lg cursor-pointer transition
+                                                ${isSelected
+                                                    ? "border-green-500 bg-green-500/20 text-white"
+                                                    : "border-white/10 hover:bg-white/10 text-gray-200"
+                                                }`}
+                                        >
+                                            {opt}
+                                        </div>
+                                    );
+                                }
+                            )}
                         </div>
 
-                        {/* Actions */}
+                        {/* ================= NAV ================= */}
                         <div className="flex justify-between mt-8">
-                            <button disabled={activeQuestion === 0} onClick={() => setActiveQuestion(activeQuestion - 1)} className="px-5 py-2 border border-white/10 rounded-lg hover:bg-white/10 transition">
+                            <button
+                                disabled={activeQuestion === 0}
+                                onClick={() =>
+                                    setActiveQuestion((p) => p - 1)
+                                }
+                                className="px-5 py-2 border border-white/10 rounded-lg hover:bg-white/10 disabled:opacity-50"
+                            >
                                 ⬅ Previous
                             </button>
-                            <button disabled={activeQuestion === count - 1} onClick={() => setActiveQuestion(activeQuestion + 1)} className="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+
+                            <button
+                                disabled={activeQuestion === count - 1}
+                                onClick={() =>
+                                    setActiveQuestion((p) => p + 1)
+                                }
+                                className="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                            >
                                 Next ➡
                             </button>
                         </div>
                     </div>
+
+                    {/* ================= SUBMIT ================= */}
+                    <div className="flex justify-center">
+                        <button
+                            onClick={() => setSubmitModal(true)}
+                            className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700"
+                        >
+                            Submit Test
+                        </button>
+                    </div>
                 </main>
             </div>
+
+            {/* ================= SUBMIT MODAL ================= */}
+            {submitModal && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/70">
+                    <div className="bg-[#020617] border border-white/10 rounded-xl p-6 max-w-md w-full shadow-xl">
+                        <h2 className="text-lg font-semibold text-white mb-3">
+                            Submit Test
+                        </h2>
+
+                        <p className="text-gray-300 mb-2">
+                            Once you submit the test, you <b>cannot go back</b>{" "}
+                            or change your answers.
+                        </p>
+
+                        <p className="text-yellow-400 font-medium mb-6">
+                            Are you sure?
+                        </p>
+
+                        <div className="flex justify-end gap-4">
+                            <button
+                                onClick={() => setSubmitModal(false)}
+                                className="px-4 py-2 border border-white/20 rounded-lg hover:bg-white/10"
+                            >
+                                No
+                            </button>
+                            <button
+                                onClick={handleSubmitConfirm}
+                                className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-700"
+                            >
+                                Yes, Submit
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

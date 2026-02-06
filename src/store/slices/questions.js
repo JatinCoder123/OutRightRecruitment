@@ -35,7 +35,7 @@ const questionsSlice = createSlice({
       state.message = null;
     },
     updateQuestion(state, action) {
-      state.currentQuestions[action.payload.index] = action.payload.status;
+      state.currentQuestions[action.payload.index] = { ...state.currentQuestions[action.payload.index], ...action.payload.data };
     }
   }
 });
