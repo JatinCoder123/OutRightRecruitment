@@ -43,17 +43,7 @@ export default function TestPage() {
 
     /* ================= SUBMIT ================= */
     const handleSubmitConfirm = () => {
-        let nextRound = candidate?.current_round;
-        if (candidate.current_round === 1 && candidate.role_result == null) {
-            nextRound = 2;
-        }
-        else if (candidate.current_round === 2 && candidate.dsa_result == null && candidate.is_dsa) {
-            nextRound = 3;
-        }
-        const candidateData = {
-            current_round: nextRound,
-        }
-        dispatch(updateCandidate(candidateData));
+        dispatch(updateCandidate());
         setSubmitModal(false);
     };
 

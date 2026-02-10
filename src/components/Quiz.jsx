@@ -103,9 +103,8 @@ export default function Quiz({ questions = [], to, testDetails }) {
       {/* Timer Above Question Card */}
       <div className="flex justify-center mb-4">
         <div
-          className={`px-5 py-2 rounded-lg shadow-md font-semibold text-lg ${
-            timeLeft <= 10 ? "bg-red-600 text-white" : "bg-gray-800 text-white"
-          }`}
+          className={`px-5 py-2 rounded-lg shadow-md font-semibold text-lg ${timeLeft <= 10 ? "bg-red-600 text-white" : "bg-gray-800 text-white"
+            }`}
         >
           ⏳ {formatTime(timeLeft)}
         </div>
@@ -139,11 +138,10 @@ export default function Quiz({ questions = [], to, testDetails }) {
               key={idx}
               onClick={() => handleAnswer(option)}
               disabled={timeLeft <= 0}
-              className={`px-4 py-3 rounded-xl border text-left transition ${
-                answers[currentQuestion.id] === option
+              className={`px-4 py-3 rounded-xl border text-left transition ${answers[currentQuestion.id] === option
                   ? "bg-[var(--color-primary)] text-white border-transparent"
                   : "bg-gray-900 border-gray-700 text-gray-200 hover:border-[var(--color-primary)]"
-              } ${timeLeft <= 0 ? "opacity-50 cursor-not-allowed" : ""}`}
+                } ${timeLeft <= 0 ? "opacity-50 cursor-not-allowed" : ""}`}
             >
               {option || "N/A"}
             </button>
@@ -175,8 +173,6 @@ export default function Quiz({ questions = [], to, testDetails }) {
             </button>
           )}
         </div>
-
-        {/* Submit at Right Most */}
         {loading ? (
           <LoadingButton text={"submiting..."} />
         ) : (
@@ -212,13 +208,12 @@ export default function Quiz({ questions = [], to, testDetails }) {
                   key={q?.id || index}
                   onClick={() => goTo(index)}
                   disabled={timeLeft <= 0}
-                  className={`w-10 h-10 rounded-full flex items-center justify-center font-medium transition ${
-                    index === currentIndex
+                  className={`w-10 h-10 rounded-full flex items-center justify-center font-medium transition ${index === currentIndex
                       ? "bg-[var(--color-primary)] text-white"
                       : answers[q?.id]
-                      ? "bg-green-600 text-white"
-                      : "bg-gray-800 text-gray-300 hover:bg-gray-700"
-                  } ${timeLeft <= 0 ? "opacity-50 cursor-not-allowed" : ""}`}
+                        ? "bg-green-600 text-white"
+                        : "bg-gray-800 text-gray-300 hover:bg-gray-700"
+                    } ${timeLeft <= 0 ? "opacity-50 cursor-not-allowed" : ""}`}
                 >
                   {index + 1}
                 </button>
