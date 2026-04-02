@@ -20,8 +20,11 @@ export default function TestPage() {
 
     /* ================= FETCH QUESTIONS ================= */
     useEffect(() => {
-        dispatch(getCurrentQuestion());
-    }, [dispatch]);
+        if (candidate) {
+            dispatch(getCurrentQuestion());
+
+        }
+    }, [candidate]);
 
     /* ================= OPTION SELECT ================= */
     const handleOptionSelect = (option) => {
@@ -43,10 +46,49 @@ export default function TestPage() {
 
     /* ================= SUBMIT ================= */
     const handleSubmitConfirm = () => {
-        dispatch(updateCandidate());
+        let nextRound = candidate?.current_round;
+        let testEnd = 0;
+
+        /* ================= CALCULATE SCORE ================= */
+        let score = 0;
+
+        currentQuestions.forEach((q) => {
+            if (q?.candidate_answer === q?.answer) {
+                score++;
+            }
+        });
+
+        /* ================= PREPARE UPDATE DATA ================= */
+        let updateData = {};
+
+        // Set score based on round
+        if (candidate?.current_round === 1) {
+            updateData.apti_result = score;
+        } else if (candidate?.current_round === 2) {
+            updateData.role_result = score;
+        } else if (candidate?.current_round === 3) {
+            updateData.dsa_result = score;
+        }
+
+        /* ================= ROUND LOGIC ================= */
+        if (nextRound <= 2) {
+            nextRound++;
+
+            if (nextRound === 2 && !candidate?.is_dsa) {
+                testEnd = 1;
+            }
+        } else {
+            testEnd = 1;
+        }
+
+        updateData.current_round = nextRound;
+        updateData.is_test_end = testEnd;
+
+        /* ================= DISPATCH ================= */
+        dispatch(updateCandidate(updateData));
+
         setSubmitModal(false);
     };
-
     return (
         <div className="h-screen flex flex-col bg-gradient-to-br from-[#020617] via-[#020617] to-black text-gray-200">
             {/* ================= HEADER ================= */}

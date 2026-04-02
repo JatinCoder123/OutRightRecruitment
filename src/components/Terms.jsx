@@ -11,7 +11,7 @@ export default function Terms({
     dsaQuestions = 10,
 }) {
     const [agreed, setAgreed] = useState(false);
-    const { candidate, updating } = useSelector((state) => state.candidate);
+    const { candidate, updating, message, error } = useSelector((state) => state.candidate);
     const dispatch = useDispatch();
     const onStart = () => {
         dispatch(updateCandidate({ is_test_started: true }));
@@ -27,6 +27,11 @@ export default function Terms({
             window.removeEventListener("popstate", handleBack);
         };
     }, []);
+    useEffect(() => {
+        if (message) {
+
+        }
+    }, [])
 
     return (
         <div className="min-h-screen flex items-center w-full 

@@ -38,7 +38,7 @@ export default function App() {
   useEffect(() => {
     dispatch(getJobRoles());
     dispatch(getCandidate());
-  }, [dispatch]);
+  }, []);
 
   return (
     <>

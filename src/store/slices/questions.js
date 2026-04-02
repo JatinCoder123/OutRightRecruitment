@@ -57,9 +57,24 @@ export const getCurrentQuestion = () => {
         questionsSlice.actions.getCurrentQuestionSuccess(data.questions)
       );
 
-      dispatch(questionsSlice.actions.clearAptiErrors());
+      dispatch(questionsSlice.actions.clearErrors());
     } catch (error) {
       dispatch(questionsSlice.actions.getCurrentQuestionFailed(error.message));
+    }
+  };
+};
+export const sendAnswer = () => {
+  return async (dispatch, getState) => {
+    try {
+      const { data } = await axios.post(
+        `${BACKEND_URL}/answer/submit`, { round: getState().candidate.current_round, answers: getState().questions.currentQuestions },
+        {
+          withCredentials: true,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+    } catch (error) {
+      console.log("FAILED TO STORE ANSWER")
     }
   };
 };

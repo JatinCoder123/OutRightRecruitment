@@ -1,31 +1,12 @@
 import { createSlice } from "@reduxjs/toolkit";
 import { BACKEND_URL } from "../constants.js";
 import axios from "axios";
+import { getCurrentQuestion } from "./questions.js";
 const candidateSlice = createSlice({
   name: "candidate",
   initialState: {
     loading: false,
     candidate: null,
-    rounds: [
-      {
-        id: 1,
-        title: "Aptitude Round",
-        status: "active",
-        duration: 20,
-      },
-      {
-        id: 2,
-        title: "Role Specific Round",
-        status: "locked",
-        duration: 20,
-      },
-      {
-        id: 3,
-        title: "DSA Round",
-        status: "locked",
-        duration: 20,
-      },
-    ],
     error: null,
     creating: false,
     updating: false,
@@ -76,14 +57,13 @@ const candidateSlice = createSlice({
     },
     updateCandidateSuccess(state, action) {
       state.updating = false;
-      state.candidate = action.payload;
-      state.message = null;
+      state.candidate = action.payload.candidate;
+      state.message = action.payload.message;
       state.error = null;
     },
     updateCandidateFailed(state, action) {
       state.updating = false;
       state.candidate = state.candidate;
-      state.message = null;
       state.error = action.payload;
     },
     clearAllErrors(state) {
@@ -152,10 +132,11 @@ export const updateCandidate = (candidate) => {
       );
       console.log("Update Candidate", data);
 
-      dispatch(candidateSlice.actions.updateCandidateSuccess({ candidate: { ...getState().candidate.candidate, ...candidate }, message: data.message }));
+      dispatch(candidateSlice.actions.updateCandidateSuccess({ candidate: data.candidate, message: data.message }));
       dispatch(candidateSlice.actions.clearAllErrors());
     } catch (error) {
-      dispatch(candidateSlice.actions.updateCandidateFailed(error.message));
+      // console.log(error)
+      dispatch(candidateSlice.actions.updateCandidateFailed("Failed to Update Candidate."));
     }
   };
 };

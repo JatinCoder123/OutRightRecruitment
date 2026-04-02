@@ -1,9 +1,7 @@
 import { useSelector } from "react-redux";
 import { Rounds } from "./Rounds";
 import { GiCrossMark } from "react-icons/gi";
-import { GiSandsOfTime } from "react-icons/gi";
-
-import { CircleCheckBig, Lock, Square, Star } from "lucide-react";
+import { Square } from "lucide-react";
 
 const TestPageSidebar = ({ activeQuestion, setActiveQuestion, setOpen }) => {
     const { currentQuestions } = useSelector(
