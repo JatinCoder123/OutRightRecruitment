@@ -67,7 +67,7 @@ export const sendAnswer = () => {
   return async (dispatch, getState) => {
     try {
       const { data } = await axios.post(
-        `${BACKEND_URL}/answer/submit`, { round: getState().candidate.current_round, answers: getState().questions.currentQuestions },
+        `${BACKEND_URL}/answer/submit`, { round: getState().candidate.candidate.current_round, answers: getState().questions.currentQuestions },
         {
           withCredentials: true,
           headers: { "Content-Type": "application/json" },

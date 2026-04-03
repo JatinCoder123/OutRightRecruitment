@@ -12,6 +12,7 @@ import Terms from "../components/Terms";
 import TestPage from "./TestPage";
 import { candidateAction, register } from "../store/slices/candidate";
 import LoadingPage from "../components/LoadingPage";
+import EndScreen from "./EndScreen";
 
 export default function Login() {
   const [formData, setFormData] = useState({
@@ -160,6 +161,9 @@ export default function Login() {
   }, [jobError, dispatch]);
   if (candidateLoading) {
     return <LoadingPage />;
+  }
+  if (candidate && candidate.is_test_end) {
+    return <EndScreen />
   }
   if (candidate && candidate.is_test_started) {
     return <TestPage />

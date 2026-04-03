@@ -1,15 +1,16 @@
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { getCurrentQuestion, questionsAction } from "../store/slices/questions";
+import { getCurrentQuestion, questionsAction, sendAnswer } from "../store/slices/questions";
 import TestPageSidebar from "../components/TestPageSidebar";
 import { CgMenuGridR } from "react-icons/cg";
 import { Star, StarOff } from "lucide-react";
 import { updateCandidate } from "../store/slices/candidate";
+import { Mosaic } from "react-loading-indicators";
 
 export default function TestPage() {
     const dispatch = useDispatch();
 
-    const { count, currentQuestions } = useSelector(
+    const { count, currentQuestions, loading } = useSelector(
         (state) => state.questions
     );
     const { candidate } = useSelector((state) => state.candidate);
@@ -18,11 +19,13 @@ export default function TestPage() {
     const [submitModal, setSubmitModal] = useState(false);
     const [activeQuestion, setActiveQuestion] = useState(0);
 
+
+
     /* ================= FETCH QUESTIONS ================= */
     useEffect(() => {
-        if (candidate) {
+        if (candidate && !candidate?.is_test_end) {
+            setActiveQuestion(0)
             dispatch(getCurrentQuestion());
-
         }
     }, [candidate]);
 
@@ -30,7 +33,6 @@ export default function TestPage() {
     const handleOptionSelect = (option) => {
         const current = currentQuestions[activeQuestion];
 
-        // Must always have one answer
         if (current?.candidate_answer === option) return;
 
         dispatch(
@@ -49,7 +51,6 @@ export default function TestPage() {
         let nextRound = candidate?.current_round;
         let testEnd = 0;
 
-        /* ================= CALCULATE SCORE ================= */
         let score = 0;
 
         currentQuestions.forEach((q) => {
@@ -58,10 +59,8 @@ export default function TestPage() {
             }
         });
 
-        /* ================= PREPARE UPDATE DATA ================= */
         let updateData = {};
 
-        // Set score based on round
         if (candidate?.current_round === 1) {
             updateData.apti_result = score;
         } else if (candidate?.current_round === 2) {
@@ -70,25 +69,38 @@ export default function TestPage() {
             updateData.dsa_result = score;
         }
 
-        /* ================= ROUND LOGIC ================= */
-        if (nextRound <= 2) {
-            nextRound++;
 
-            if (nextRound === 2 && !candidate?.is_dsa) {
+
+        // ================= SMART ROUND LOGIC =================
+        if (nextRound === 1) {
+            if (candidate?.role_result === null) {
+                nextRound = 2;
+            } else if (candidate?.is_dsa && candidate?.dsa_result === null) {
+                nextRound = 3;
+            } else {
                 testEnd = 1;
             }
-        } else {
+        }
+        else if (nextRound === 2) {
+            if (candidate?.is_dsa && candidate?.dsa_result === null) {
+                nextRound = 3;
+            } else {
+                testEnd = 1;
+            }
+        }
+        else {
             testEnd = 1;
         }
 
         updateData.current_round = nextRound;
         updateData.is_test_end = testEnd;
 
-        /* ================= DISPATCH ================= */
         dispatch(updateCandidate(updateData));
+        dispatch(sendAnswer());
 
         setSubmitModal(false);
     };
+
     return (
         <div className="h-screen flex flex-col bg-gradient-to-br from-[#020617] via-[#020617] to-black text-gray-200">
             {/* ================= HEADER ================= */}
@@ -98,7 +110,8 @@ export default function TestPage() {
                 </h1>
                 <div className="flex items-center gap-6 text-sm">
                     <span className="text-gray-400">
-                        Round {candidate?.current_round} of {candidate?.is_dsa ? 3 : 2}
+                        Round {candidate?.current_round} of{" "}
+                        {candidate?.is_dsa ? 3 : 2}
                     </span>
                     <span className="font-mono bg-white/10 px-3 py-1 rounded text-white">
                         ⏱ 12:45
@@ -142,109 +155,124 @@ export default function TestPage() {
 
                 {/* ================= MAIN ================= */}
                 <main className="flex-1 p-6 lg:p-10 overflow-y-auto flex flex-col gap-10 lg:mt-2 mt-10">
-                    <div className="max-w-3xl mx-auto bg-white/5 backdrop-blur border border-white/10 p-6 rounded-xl shadow-lg">
-                        <div className="flex justify-between items-center mb-4">
-                            <h2 className="text-sm text-gray-400">
-                                Question {activeQuestion + 1} / {count}
-                            </h2>
-
-                            <button
-                                onClick={() =>
-                                    dispatch(
-                                        questionsAction.updateQuestion({
-                                            index: activeQuestion,
-                                            data: {
-                                                mark:
-                                                    !currentQuestions[activeQuestion]
-                                                        ?.mark,
-                                            },
-                                        })
-                                    )
-                                }
-                                className="text-sm text-blue-400 flex items-center gap-2 hover:underline"
-                            >
-                                {currentQuestions[activeQuestion]?.mark ? (
-                                    <StarOff
-                                        className="text-yellow-500"
-                                        size={15}
-                                    />
-                                ) : (
-                                    <Star
-                                        className="text-yellow-500"
-                                        size={15}
-                                    />
-                                )}
-                                {currentQuestions[activeQuestion]?.mark
-                                    ? "Unmark"
-                                    : "Mark"}{" "}
-                                for Review
-                            </button>
+                    {loading ? (
+                        <div className="flex flex-col items-center justify-center h-full gap-4">
+                            <Mosaic color="#32cd32" size="large" />
+                            <p className="text-gray-400">
+                                Loading questions...
+                            </p>
                         </div>
+                    ) : (
+                        <>
+                            <div className="max-w-3xl mx-auto bg-white/5 backdrop-blur border border-white/10 p-6 rounded-xl shadow-lg">
+                                <div className="flex justify-between items-center mb-4">
+                                    <h2 className="text-sm text-gray-400">
+                                        Question {activeQuestion + 1} / {count}
+                                    </h2>
 
-                        <p className="text-lg font-medium mb-6 text-white">
-                            {currentQuestions[activeQuestion]?.question}
-                        </p>
+                                    <button
+                                        onClick={() =>
+                                            dispatch(
+                                                questionsAction.updateQuestion({
+                                                    index: activeQuestion,
+                                                    data: {
+                                                        mark:
+                                                            !currentQuestions[
+                                                                activeQuestion
+                                                            ]?.mark,
+                                                    },
+                                                })
+                                            )
+                                        }
+                                        className="text-sm text-blue-400 flex items-center gap-2 hover:underline"
+                                    >
+                                        {currentQuestions[activeQuestion]?.mark ? (
+                                            <StarOff
+                                                className="text-yellow-500"
+                                                size={15}
+                                            />
+                                        ) : (
+                                            <Star
+                                                className="text-yellow-500"
+                                                size={15}
+                                            />
+                                        )}
+                                        {currentQuestions[activeQuestion]?.mark
+                                            ? "Unmark"
+                                            : "Mark"}{" "}
+                                        for Review
+                                    </button>
+                                </div>
 
-                        {/* ================= OPTIONS ================= */}
-                        <div className="space-y-3">
-                            {currentQuestions[activeQuestion]?.options?.map(
-                                (opt, idx) => {
-                                    const isSelected =
+                                <p className="text-lg font-medium mb-6 text-white">
+                                    {
                                         currentQuestions[activeQuestion]
-                                            ?.candidate_answer === opt;
+                                            ?.question
+                                    }
+                                </p>
 
-                                    return (
-                                        <div
-                                            key={idx}
-                                            onClick={() =>
-                                                handleOptionSelect(opt)
-                                            }
-                                            className={`p-4 border rounded-lg cursor-pointer transition
+                                {/* OPTIONS */}
+                                <div className="space-y-3">
+                                    {currentQuestions[
+                                        activeQuestion
+                                    ]?.options?.map((opt, idx) => {
+                                        const isSelected =
+                                            currentQuestions[activeQuestion]
+                                                ?.candidate_answer === opt;
+
+                                        return (
+                                            <div
+                                                key={idx}
+                                                onClick={() =>
+                                                    handleOptionSelect(opt)
+                                                }
+                                                className={`p-4 border rounded-lg cursor-pointer transition
                                                 ${isSelected
-                                                    ? "border-green-500 bg-green-500/20 text-white"
-                                                    : "border-white/10 hover:bg-white/10 text-gray-200"
-                                                }`}
-                                        >
-                                            {opt}
-                                        </div>
-                                    );
-                                }
-                            )}
-                        </div>
+                                                        ? "border-green-500 bg-green-500/20 text-white"
+                                                        : "border-white/10 hover:bg-white/10 text-gray-200"
+                                                    }`}
+                                            >
+                                                {opt}
+                                            </div>
+                                        );
+                                    })}
+                                </div>
 
-                        {/* ================= NAV ================= */}
-                        <div className="flex justify-between mt-8">
-                            <button
-                                disabled={activeQuestion === 0}
-                                onClick={() =>
-                                    setActiveQuestion((p) => p - 1)
-                                }
-                                className="px-5 py-2 border border-white/10 rounded-lg hover:bg-white/10 disabled:opacity-50"
-                            >
-                                ⬅ Previous
-                            </button>
+                                {/* NAV */}
+                                <div className="flex justify-between mt-8">
+                                    <button
+                                        disabled={activeQuestion === 0}
+                                        onClick={() =>
+                                            setActiveQuestion((p) => p - 1)
+                                        }
+                                        className="px-5 py-2 border border-white/10 rounded-lg hover:bg-white/10 disabled:opacity-50"
+                                    >
+                                        ⬅ Previous
+                                    </button>
 
-                            <button
-                                disabled={activeQuestion === count - 1}
-                                onClick={() =>
-                                    setActiveQuestion((p) => p + 1)
-                                }
-                                className="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
-                            >
-                                Next ➡
-                            </button>
-                        </div>
-                    </div>
+                                    <button
+                                        disabled={activeQuestion === count - 1}
+                                        onClick={() =>
+                                            setActiveQuestion((p) => p + 1)
+                                        }
+                                        className="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                                    >
+                                        Next ➡
+                                    </button>
+                                </div>
+                            </div>
 
-                    {/* ================= SUBMIT ================= */}
-                    <div className="flex justify-center">
-                        <button
-                            onClick={() => setSubmitModal(true)}
-                            className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700"
-                        >
-                            Submit Test
-                        </button>
-                    </div>
+                            {/* SUBMIT */}
+                            <div className="flex justify-center">
+                                <button
+                                    onClick={() => setSubmitModal(true)}
+                                    className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700"
+                                >
+                                    Submit Test
+                                </button>
+                            </div>
+                        </>
+                    )}
                 </main>
             </div>
 
