@@ -156,7 +156,7 @@ export default function Login() {
     if (jobError) {
       // toast.error(jobError);
       dispatch(jobRoleAction.clearAllErrors());
-      dispatch(getJobRoles())
+      // dispatch(getJobRoles())
     }
   }, [jobError, dispatch]);
   if (candidateLoading) {

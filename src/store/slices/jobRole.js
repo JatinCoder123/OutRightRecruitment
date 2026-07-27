@@ -34,9 +34,7 @@ export const getJobRoles = () => {
     try {
       const { data } = await axios.get(
         `${BACKEND_URL}/roles/get_roles`,
-        {
-          withCredentials: true,
-        }
+
       );
       console.log("jobRole", data);
       dispatch(jobRoleSlice.actions.getJobRolesSuccess(data.roles));
